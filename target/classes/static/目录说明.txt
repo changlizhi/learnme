@@ -1,0 +1,4 @@
+/static
+/public
+/META-INF/resources
+下的映射为/**

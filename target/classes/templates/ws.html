@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th='http://www.thymeleaf.org'>
+<head>
+  <meta charset='UTF-8'/>
+  <title>clz web socket</title>
+  <script th:src='@{/jquery/jquery.js}'/>
+  <script th:src='@{/websocket/sockjs.js}'/>
+  <script th:src='@{/websocket/stomp.js}'/>
+</head>
+<body onload='disconnect()'>
+<noscript>
+  <div>你的浏览器不支持web socket</div>
+</noscript>
+<div>
+  <div>
+    <button id='connect' onclick='connect();'>链接</button>
+    <button id='disconnect' onclick='disconnect();'>断开</button>
+  </div>
+  <div id='conversationDiv' style='visibility: visible'>
+    <hr/>
+    <div>
+      <label>你的名字：</label><input type='text' id='name'/>
+      <button id='sendName' onclick='sendName()'>发送</button>
+    </div>
+    <hr/>
+  </div>
+
+  <p id='response' style='color: red'>faewfwe</p>
+
+</div>
+<script type='text/javascript'>
+  var stompClient = null;
+  function showResponse(message) {
+    var responseDiv = $('#response');
+    console.log('进入showResponse');
+    console.log(message);
+    responseDiv.html(message);
+  }
+  function sendName() {
+    var name = $('#name').val();
+    stompClient.send('/app/welcome', {}, JSON.stringify({'name': name}));
+  }
+
+  function setConnect(connected) {
+    $('#connect').disabled = connected;
+    $('#disconnect').disabled = !connected;
+    if (connected) {
+      $('#conversationDiv').css('visibility', 'visible');
+    } else {
+      $('#conversationDiv').css('visibility', 'hidden');
+    }
+    $('#response').html();
+  }
+
+  function connect() {
+    var sock = new SockJS('/endpointWisely');
+    stompClient = Stomp.over(sock);
+    stompClient.connect({}, function(frame) {
+      setConnect(true);
+      console.log('Connect:' + frame);
+      stompClient.subscribe('/topic/getResponse', function(response) {
+        console.log(response);
+        showResponse(JSON.parse(response.body).responseMessage);
+      })
+    });
+  }
+
+  function disconnect() {
+    if (stompClient != null) {
+      stompClient.disconnect();
+    }
+    setConnect(false);
+    console.log('disconnected!');
+  }
+</script>
+
+</body>
+</html>

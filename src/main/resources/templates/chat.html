@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>聊天</title>
+  <script th:src="@{/jquery/jquery.js}"></script>
+  <script th:src="@{/websocket/sockjs.js}"></script>
+  <script th:src="@{/websocket/stomp.js}"></script>
+</head>
+<body>
+<p>聊天室：</p>
+<form id="wiselyForm">
+  <textarea rows="4" cols="60" name="text"></textarea>
+  <input type="submit"/>
+</form>
+<div id="output">fwefwe</div>
+<div>
+  <button id="stop">断开</button>
+</div>
+<script th:inline="javascript">
+  function handleNotification(message) {
+    $("#output").append("<b>Received:" + message.body + "</b><br/>")
+  }
+  var sockJs = new SockJS("/endpointChat");
+  var stompJs = Stomp.over(sockJs);
+  stompJs.connect("guest", "guest", function(frame) {
+    //订阅了/user/queue/notifications发送的消息，其中多了个/use
+    //且这个/user是必须的，使用user才会发送消息到指定用户
+    stompJs.subscribe("/user/queue/notifications", handleNotification)
+  });
+  var sendSpittle = function(text) {
+    stompJs.send("/app/chat", {}, JSON.stringify({"name": text}));
+  };
+  $("#wiselyForm").submit(function(e) {
+    e.preventDefault();
+    var text = $("#wiselyForm").find('textarea[name="text"]').val();
+    sendSpittle(text);
+  });
+
+  $("#stop").click(function() {
+    sockJs.close();
+  })
+</script>
+</body>
+</html>

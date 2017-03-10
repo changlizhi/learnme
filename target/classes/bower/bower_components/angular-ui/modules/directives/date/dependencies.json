@@ -1,0 +1,8 @@
+{
+  "core": [
+    "jquery",
+    "jquery-ui"
+  ],
+  "internal": [],
+  "external": []
+}
